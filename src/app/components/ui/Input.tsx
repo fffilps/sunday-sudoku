@@ -1,7 +1,11 @@
 import React from 'react'
 
-export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {}
+interface InputProps {
+  value: string; // Example member
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void; // Example member
+  className?: string; // Added className
+  type?: string; // Added type
+}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, ...props }, ref) => {
