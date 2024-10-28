@@ -1,3 +1,6 @@
+// Import the isValidMove function from SudokuGame
+import { isValidMove } from '../components/SudokuGame'
+
 // Function to generate a solved Sudoku grid
 function generateSolvedGrid(): number[][] {
     const grid = Array(9).fill(null).map(() => Array(9).fill(0))
