@@ -1,3 +1,9 @@
+# Sunday Sudoku
+
+### Created with AI. Initially from Vercel v0, Perplexity, and Cursor (claude). 
+
+Starting mainly as a nextjs app then will become a react native application to iOS native app. 
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
