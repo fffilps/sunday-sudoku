@@ -18,7 +18,7 @@ const createEmptyGrid = () =>
     .fill(null)
     .map(() => Array(9).fill(0));
 
-// Update isValidMove to handle shake animation
+// Update isValidMove to handle shake and color animation
 export const isValidMove = (
   grid: Grid,
   row: number,
@@ -295,7 +295,7 @@ export default function SudokuGame() {
                     } 
                     ${colIndex % 3 === 2 && colIndex !== 8 ? "border-r-2 border-r-black" : ""}
                     ${rowIndex % 3 === 2 && rowIndex !== 8 ? "border-b-2 border-b-black" : ""}
-                    ${shakeCell === `${rowIndex}-${colIndex}` ? "animate-shake" : ""}
+                    ${shakeCell === `${rowIndex}-${colIndex}` ? "animate-shake bg-red-200" : ""}
                   `}
                   onClick={() => handleCellClick(rowIndex, colIndex)}
                 >
