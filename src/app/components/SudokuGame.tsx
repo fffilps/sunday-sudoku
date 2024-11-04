@@ -18,21 +18,31 @@ const createEmptyGrid = () =>
     .fill(null)
     .map(() => Array(9).fill(0));
 
-// Change from const to export const
+// Update isValidMove to handle shake animation
 export const isValidMove = (
   grid: Grid,
   row: number,
   col: number,
-  value: PuzzleValue
+  value: PuzzleValue,
+  setShakeCell?: (key: string | null) => void
 ): boolean => {
+  const triggerShake = () => {
+    if (setShakeCell) {
+      const cellKey = `${row}-${col}`;
+      setShakeCell(cellKey);
+      setTimeout(() => setShakeCell(null), 500);
+    }
+    return false;
+  };
+
   // Check row
   for (let x = 0; x < 9; x++) {
-    if (grid[row][x] === value) return false;
+    if (grid[row][x] === value) return triggerShake();
   }
 
   // Check column
   for (let x = 0; x < 9; x++) {
-    if (grid[x][col] === value) return false;
+    if (grid[x][col] === value) return triggerShake();
   }
 
   // Check 3x3 box
@@ -40,7 +50,7 @@ export const isValidMove = (
   const boxCol = Math.floor(col / 3) * 3;
   for (let i = 0; i < 3; i++) {
     for (let j = 0; j < 3; j++) {
-      if (grid[boxRow + i][boxCol + j] === value) return false;
+      if (grid[boxRow + i][boxCol + j] === value) return triggerShake();
     }
   }
 
@@ -217,17 +227,14 @@ export default function SudokuGame() {
     setSelectedCell([row, col]);
   };
 
+  // Update handleInput to use new isValidMove
   const handleInput = useCallback((value: PuzzleValue) => {
     if (!selectedCell) return;
 
     const [row, col] = selectedCell;
     const cellKey = `${row}-${col}`;
     
-    // Check if the input matches the solved grid
-    const inputValue = value.toString();
-    const solvedValue = solvedGrid[row][col].toString();
-
-    if (isValidMove(grid, row, col, value)) {
+    if (isValidMove(grid, row, col, value, setShakeCell)) {
       const newGrid = grid.map((r) => [...r]);
       newGrid[row][col] = value;
       setGrid(newGrid);
@@ -238,14 +245,8 @@ export default function SudokuGame() {
         newSet.add(cellKey);
         return newSet;
       });
-
-      if (inputValue !== solvedValue) {
-        // Trigger shake animation only for incorrect inputs
-        setShakeCell(cellKey);
-        setTimeout(() => setShakeCell(null), 500);
-      }
     }
-  }, [selectedCell, grid, solvedGrid]);
+  }, [selectedCell, grid, setShakeCell]);
 
   const resetGame = () => {
     setGrid(createEmptyGrid());
