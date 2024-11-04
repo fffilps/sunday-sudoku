@@ -195,20 +195,17 @@ export default function SudokuGame() {
     "easy"
   );
   const [puzzleType, setPuzzleType] = useState<PuzzleType>("numbers");
-  const [solvedGrid, setSolvedGrid] = useState<Grid>([]);
-  const [incorrectCells, setIncorrectCells] = useState<string | null>(null);
   const [userInputs, setUserInputs] = useState<UserInputs>(new Set());
   const [shakeCell, setShakeCell] = useState<string | null>(null);
 
   // Add useCallback to memoize startNewGame
   const startNewGame = useCallback(() => {
     const solved = generateSolvedGrid();
-    setSolvedGrid(solved);
+    setGrid(solved);
     const newPuzzle = generateSudokuPuzzle(difficulty);
     setGrid(newPuzzle);
     setSelectedCell(null);
     setIsGameWon(false);
-    setIncorrectCells(null);
     setUserInputs(new Set()); // Reset user inputs
   }, [difficulty]); // Added difficulty as a dependency
 
