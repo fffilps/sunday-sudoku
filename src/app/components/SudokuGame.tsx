@@ -9,6 +9,9 @@ type PuzzleType = "numbers" | "letters";
 type PuzzleValue = number | string;
 type Grid = PuzzleValue[][];
 
+// Add new type for tracking user inputs
+type UserInputs = Set<string>;
+
 // Helper function to create an empty 9x9 Sudoku grid
 const createEmptyGrid = () =>
   Array(9)
@@ -183,7 +186,9 @@ export default function SudokuGame() {
   );
   const [puzzleType, setPuzzleType] = useState<PuzzleType>("numbers");
   const [solvedGrid, setSolvedGrid] = useState<Grid>([]);
-  const [incorrectCells, setIncorrectCells] = useState<Set<string>>(new Set());
+  const [incorrectCells, setIncorrectCells] = useState<string | null>(null);
+  const [userInputs, setUserInputs] = useState<UserInputs>(new Set());
+  const [shakeCell, setShakeCell] = useState<string | null>(null);
 
   // Add useCallback to memoize startNewGame
   const startNewGame = useCallback(() => {
@@ -193,7 +198,8 @@ export default function SudokuGame() {
     setGrid(newPuzzle);
     setSelectedCell(null);
     setIsGameWon(false);
-    setIncorrectCells(new Set());
+    setIncorrectCells(null);
+    setUserInputs(new Set()); // Reset user inputs
   }, [difficulty]); // Added difficulty as a dependency
 
   // Add useEffect to start a new game when component mounts
@@ -215,28 +221,37 @@ export default function SudokuGame() {
     if (!selectedCell) return;
 
     const [row, col] = selectedCell;
+    const cellKey = `${row}-${col}`;
+    
+    // Check if the input matches the solved grid
+    const inputValue = value.toString();
+    const solvedValue = solvedGrid[row][col].toString();
+
     if (isValidMove(grid, row, col, value)) {
       const newGrid = grid.map((r) => [...r]);
       newGrid[row][col] = value;
       setGrid(newGrid);
 
-      // Check if the input matches the solved grid
-      const cellKey = `${row}-${col}`;
-      const newIncorrectCells = new Set(incorrectCells);
+      // Add to user inputs
+      setUserInputs(prev => {
+        const newSet = new Set(prev);
+        newSet.add(cellKey);
+        return newSet;
+      });
 
-      if (value !== solvedGrid[row][col]) {
-        newIncorrectCells.add(cellKey);
-      } else {
-        newIncorrectCells.delete(cellKey);
+      if (inputValue !== solvedValue) {
+        // Trigger shake animation only for incorrect inputs
+        setShakeCell(cellKey);
+        setTimeout(() => setShakeCell(null), 500);
       }
-      setIncorrectCells(newIncorrectCells);
     }
-  }, [selectedCell, grid, solvedGrid, incorrectCells]); // Ensure dependencies are correct
+  }, [selectedCell, grid, solvedGrid]);
 
   const resetGame = () => {
     setGrid(createEmptyGrid());
     setSelectedCell(null);
     setIsGameWon(false);
+    setUserInputs(new Set());
   };
 
   // Add keyboard event listener
@@ -272,33 +287,25 @@ export default function SudokuGame() {
               row.map((cell, colIndex) => (
                 <div
                   key={`${rowIndex}-${colIndex}`}
-                  className={`w-8 h-8 flex items-center justify-center border bg-slate-200 
-                    ${
-                      selectedCell &&
-                      selectedCell[0] === rowIndex &&
-                      selectedCell[1] === colIndex
-                        ? "bg-blue-500"
-                        : "bg-gray-100"
+                  className={`w-8 h-8 flex items-center justify-center border
+                    ${selectedCell && selectedCell[0] === rowIndex && selectedCell[1] === colIndex
+                      ? "bg-blue-200"
+                      : "bg-slate-100"
                     } 
-                    ${
-                      colIndex % 3 === 2 && colIndex !== 8
-                        ? "border-r-2 border-r-black"
-                        : ""
-                    }
-                    ${
-                      rowIndex % 3 === 2 && rowIndex !== 8
-                        ? "border-b-2 border-b-black"
-                        : ""
-                    }
-                    ${
-                      incorrectCells.has(`${rowIndex}-${colIndex}`)
-                        ? "border-2 border-red-500"
-                        : ""
-                    }
+                    ${colIndex % 3 === 2 && colIndex !== 8 ? "border-r-2 border-r-black" : ""}
+                    ${rowIndex % 3 === 2 && rowIndex !== 8 ? "border-b-2 border-b-black" : ""}
+                    ${shakeCell === `${rowIndex}-${colIndex}` ? "animate-shake" : ""}
                   `}
                   onClick={() => handleCellClick(rowIndex, colIndex)}
                 >
-                  {cell !== 0 && cell}
+                  {cell !== 0 && (
+                    <span className={`
+                      ${userInputs.has(`${rowIndex}-${colIndex}`) ? "text-blue-600" : "text-black"}
+                      font-medium
+                    `}>
+                      {cell}
+                    </span>
+                  )}
                 </div>
               ))
             )}
