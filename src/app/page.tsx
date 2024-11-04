@@ -2,8 +2,10 @@ import SudokuGame from "./components/SudokuGame";
 
 export default function Home() {
   return (
-    <div className="">
+    <main className="min-h-screen">
+      <title>Sunday Sudoku</title>
+      <meta name="description" content="A relaxing Sunday Sudoku puzzle game" />
       <SudokuGame />
-    </div>
+    </main>
   );
 }
