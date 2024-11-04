@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "./ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/Card";
+import Image from "next/image";
+import SundaySudokuIcon from "../../../public/SundaySudoku.png";
 
 // Add new type definitions at the top
 type PuzzleType = "numbers" | "letters";
@@ -276,7 +278,8 @@ export default function SudokuGame() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-center text-black">
-            Sunday Sudoku
+            {/* Sunday Sudoku */}
+            <Image src={SundaySudokuIcon} alt="Sunday Sudoku" className="w-full h-auto" width={250} height={250} />
           </CardTitle>
         </CardHeader>
         <CardContent>
