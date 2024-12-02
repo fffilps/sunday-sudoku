@@ -7,6 +7,7 @@ import Image from "next/image";
 import SundaySudokuIcon from "../../../public/SundaySudoku.png";
 import { updatePuzzleCompletion } from "../actions/updateProgress";
 import { User } from "@supabase/supabase-js";
+import { SuccessModal } from "./SuccessModal"
 // Add new type definitions at the top
 type PuzzleType = "numbers" | "letters";
 type PuzzleValue = number | string;
@@ -188,28 +189,7 @@ const getValidInputs = (type: PuzzleType): PuzzleValue[] => {
   }
 };
 
-async function onPuzzleComplete(user: User) {
-  if (!user) {
-    console.error("No user found")
-    return
-  }
 
-  try {
-    const result = await updatePuzzleCompletion(user.id)
-    
-    if (result.success) {
-      console.log(`Successfully updated! Total completed puzzles: ${result.completed_puzzles}`)
-      // You could show this in the UI
-      return true
-    } else {
-      console.error("Failed to update progress:", result.error)
-      return false
-    }
-  } catch (error) {
-    console.error("Error in onPuzzleComplete:", error)
-    return false
-  }
-}
 
 export default function SudokuGame({ user }: { user: User }) {
   const [grid, setGrid] = useState<Grid>(createEmptyGrid());
@@ -223,6 +203,30 @@ export default function SudokuGame({ user }: { user: User }) {
   const [puzzleType, setPuzzleType] = useState<PuzzleType>("numbers");
   const [userInputs, setUserInputs] = useState<UserInputs>(new Set());
   const [shakeCell, setShakeCell] = useState<string | null>(null);
+  const [completedPuzzles, setCompletedPuzzles] = useState<number>(0)
+
+  async function onPuzzleComplete(user: User) {
+    if (!user) {
+      console.error("No user found")
+      return
+    }
+  
+    try {
+      const result = await updatePuzzleCompletion(user.id)
+      
+      if (result.success && result.completed_puzzles) {
+        console.log(`Successfully updated! Total completed puzzles: ${result.completed_puzzles}`)
+        setCompletedPuzzles(result.completed_puzzles)
+        return true
+      } else {
+        console.error("Failed to update progress:", result.error)
+        return false
+      }
+    } catch (error) {
+      console.error("Error in onPuzzleComplete:", error)
+      return false
+    }
+  }
 
   // Add useCallback to memoize startNewGame
   const startNewGame = useCallback(() => {
@@ -304,6 +308,12 @@ export default function SudokuGame({ user }: { user: User }) {
     if (success) {
       setIsGameWon(true)
     }
+  }
+
+  // Add handler for modal close
+  const handleSuccessModalClose = () => {
+    setIsGameWon(false)
+    startNewGame()
   }
 
   return (
@@ -408,10 +418,13 @@ export default function SudokuGame({ user }: { user: User }) {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Replace the success message with modal */}
       {isGameWon && (
-        <div className="mt-2 sm:mt-4 text-xl sm:text-2xl font-bold text-emerald-600 bg-white/80 px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg">
-          Congratulations! You solved the puzzle!
-        </div>
+        <SuccessModal 
+          completedPuzzles={completedPuzzles}
+          onClose={handleSuccessModalClose}
+        />
       )}
     </div>
   );
