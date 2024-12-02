@@ -4,6 +4,9 @@
 
 Starting mainly as a nextjs app then will become a react native application to iOS native app. 
 
+## todo: 
+so left off on progress updating. Make new function thats simple. it updates the userprogress with the new updated completed puzzle count. then document the level of each puzzle done - for algorithm with ranking and scoreing. 
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

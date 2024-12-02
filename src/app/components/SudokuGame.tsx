@@ -5,7 +5,8 @@ import { Button } from "./ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/Card";
 import Image from "next/image";
 import SundaySudokuIcon from "../../../public/SundaySudoku.png";
-
+import { updatePuzzleCompletion } from "../actions/updateProgress";
+import { User } from "@supabase/supabase-js";
 // Add new type definitions at the top
 type PuzzleType = "numbers" | "letters";
 type PuzzleValue = number | string;
@@ -187,7 +188,30 @@ const getValidInputs = (type: PuzzleType): PuzzleValue[] => {
   }
 };
 
-export default function SudokuGame() {
+async function onPuzzleComplete(user: User) {
+  if (!user) {
+    console.error("No user found")
+    return
+  }
+
+  try {
+    const result = await updatePuzzleCompletion(user.id)
+    
+    if (result.success) {
+      console.log(`Successfully updated! Total completed puzzles: ${result.completed_puzzles}`)
+      // You could show this in the UI
+      return true
+    } else {
+      console.error("Failed to update progress:", result.error)
+      return false
+    }
+  } catch (error) {
+    console.error("Error in onPuzzleComplete:", error)
+    return false
+  }
+}
+
+export default function SudokuGame({ user }: { user: User }) {
   const [grid, setGrid] = useState<Grid>(createEmptyGrid());
   const [selectedCell, setSelectedCell] = useState<[number, number] | null>(
     null
@@ -219,8 +243,9 @@ export default function SudokuGame() {
   useEffect(() => {
     if (isSolved(grid)) {
       setIsGameWon(true);
+      onPuzzleComplete(user);
     }
-  }, [grid]);
+  }, [grid, user]);
 
   const handleCellClick = (row: number, col: number) => {
     setSelectedCell([row, col]);
@@ -273,36 +298,45 @@ export default function SudokuGame() {
     return () => window.removeEventListener("keypress", handleKeyPress);
   }, [selectedCell, puzzleType, handleInput]);
 
+  // Add test function
+  const handleTestCompletion = async () => {
+    const success = await onPuzzleComplete(user)
+    if (success) {
+      setIsGameWon(true)
+    }
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 shadow-lg shadow-black">
-      <Card className="w-full max-w-md">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <Card className="w-full max-w-xl bg-white/80 backdrop-blur-sm shadow-lg">
         <CardHeader>
-          <CardTitle className="text-3xl font-bold text-center text-black">
-            {/* Sunday Sudoku */}
+          <CardTitle className="text-3xl font-bold text-center text-indigo-900">
             <Image src={SundaySudokuIcon} alt="Sunday Sudoku" className="w-full h-auto" width={250} height={250} />
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-9 gap-1 mb-4 text-black bg-white">
+        <CardContent className="p-2 sm:p-6 flex flex-col gap-2">
+          <div className="grid grid-cols-9 gap-[2px] bg-indigo-50/80 p-2 sm:p-4 rounded-lg shadow-inner aspect-square">
             {grid.map((row, rowIndex) =>
               row.map((cell, colIndex) => (
                 <div
                   key={`${rowIndex}-${colIndex}`}
-                  className={`w-8 h-8 flex items-center justify-center border
+                  className={`aspect-square flex items-center justify-center border text-sm sm:text-base
                     ${selectedCell && selectedCell[0] === rowIndex && selectedCell[1] === colIndex
-                      ? "bg-blue-200"
-                      : "bg-slate-100"
+                      ? "bg-indigo-200 border-indigo-400"
+                      : "bg-white/90 hover:bg-indigo-50 border-indigo-100"
                     } 
-                    ${colIndex % 3 === 2 && colIndex !== 8 ? "border-r-2 border-r-black" : ""}
-                    ${rowIndex % 3 === 2 && rowIndex !== 8 ? "border-b-2 border-b-black" : ""}
-                    ${shakeCell === `${rowIndex}-${colIndex}` ? "animate-shake bg-red-200" : ""}
+                    ${colIndex % 3 === 2 && colIndex !== 8 ? "border-r-2 border-r-indigo-400" : ""}
+                    ${rowIndex % 3 === 2 && rowIndex !== 8 ? "border-b-2 border-b-indigo-400" : ""}
+                    ${shakeCell === `${rowIndex}-${colIndex}` ? "animate-shake bg-red-50" : ""}
                   `}
                   onClick={() => handleCellClick(rowIndex, colIndex)}
                 >
                   {cell !== 0 && (
                     <span className={`
-                      ${userInputs.has(`${rowIndex}-${colIndex}`) ? "text-blue-600" : "text-black"}
-                      font-medium
+                      ${userInputs.has(`${rowIndex}-${colIndex}`) 
+                        ? "text-indigo-600 font-semibold" 
+                        : "text-slate-700 font-medium"
+                      }
                     `}>
                       {cell}
                     </span>
@@ -311,26 +345,48 @@ export default function SudokuGame() {
               ))
             )}
           </div>
-          <div className="grid grid-cols-3 gap-2 mb-4">
+          <div className="flex justify-evenly gap-1 sm:gap-2 py-2">
             {getValidInputs(puzzleType).map((value) => (
-              <Button key={value} onClick={() => handleInput(value)}>
+              <Button
+                key={value}
+                onClick={() => handleInput(value)}
+                className="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-200 
+                  transition-colors duration-200 w-8 h-8 sm:w-10 sm:h-10 p-0 rounded-lg text-sm sm:text-base"
+              >
                 {value}
               </Button>
             ))}
           </div>
-          <div className="flex justify-between mb-4">
-            <Button onClick={resetGame}>Reset Game</Button>
-            <Button onClick={startNewGame}>New Game</Button>
+          <div className="flex justify-between gap-1 sm:gap-2">
+            <Button 
+              onClick={resetGame}
+              className="bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-200 text-sm sm:text-base"
+            >
+              Reset
+            </Button>
+            <Button 
+              onClick={startNewGame}
+              className="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 border border-emerald-200 text-sm sm:text-base"
+            >
+              New Game
+            </Button>
+            {process.env.NODE_ENV === 'development' && (
+              <Button 
+                onClick={handleTestCompletion}
+                className="bg-purple-100 hover:bg-purple-200 text-purple-700 border border-purple-200 text-sm sm:text-base"
+              >
+                Test
+              </Button>
+            )}
           </div>
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-indigo-50/50 p-2 sm:p-3 rounded-lg text-sm sm:text-base">
             <div className="flex items-center gap-2">
-              <span>Difficulty:</span>
+              <span className="text-indigo-700 whitespace-nowrap">Difficulty:</span>
               <select
                 value={difficulty}
-                onChange={(e) =>
-                  setDifficulty(e.target.value as "easy" | "medium" | "hard")
-                }
-                className="p-2 border rounded text-black"
+                onChange={(e) => setDifficulty(e.target.value as "easy" | "medium" | "hard")}
+                className="p-1 sm:p-2 border rounded bg-white/80 text-indigo-700 border-indigo-200 
+                  focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 outline-none"
               >
                 <option value="easy">Easy</option>
                 <option value="medium">Medium</option>
@@ -338,11 +394,12 @@ export default function SudokuGame() {
               </select>
             </div>
             <div className="flex items-center gap-2">
-              <span>Type:</span>
+              <span className="text-indigo-700">Type:</span>
               <select
                 value={puzzleType}
                 onChange={(e) => setPuzzleType(e.target.value as PuzzleType)}
-                className="p-2 border rounded text-black"
+                className="p-1 sm:p-2 border rounded bg-white/80 text-indigo-700 border-indigo-200 
+                  focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 outline-none"
               >
                 <option value="numbers">Numbers</option>
                 {/* <option value="letters">Letters</option> */}
@@ -352,7 +409,7 @@ export default function SudokuGame() {
         </CardContent>
       </Card>
       {isGameWon && (
-        <div className="mt-4 text-2xl font-bold text-green-600">
+        <div className="mt-2 sm:mt-4 text-xl sm:text-2xl font-bold text-emerald-600 bg-white/80 px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg">
           Congratulations! You solved the puzzle!
         </div>
       )}
