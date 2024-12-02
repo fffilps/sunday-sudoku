@@ -11,6 +11,8 @@ so left off on progress updating. Make new function thats simple. it updates the
 
 - Need to hide the type portion for now, as i dont know the other types yet nor began building it out.
 
+- add a guest mode, but all guest maybe is a certain guest account auto signed in, but has new id tracked for that device and information still to see how many people use it and usage information.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

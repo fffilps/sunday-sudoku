@@ -16,6 +16,14 @@ type Grid = PuzzleValue[][];
 // Add new type for tracking user inputs
 type UserInputs = Set<string>;
 
+// Add new type for completion results
+type CompletionResults = {
+  completed_puzzles: number;
+  easy_completed: number;
+  medium_completed: number;
+  hard_completed: number;
+}
+
 // Helper function to create an empty 9x9 Sudoku grid
 const createEmptyGrid = () =>
   Array(9)
@@ -203,7 +211,12 @@ export default function SudokuGame({ user }: { user: User }) {
   const [puzzleType, setPuzzleType] = useState<PuzzleType>("numbers");
   const [userInputs, setUserInputs] = useState<UserInputs>(new Set());
   const [shakeCell, setShakeCell] = useState<string | null>(null);
-  const [completedPuzzles, setCompletedPuzzles] = useState<number>(0)
+  const [completionResults, setCompletionResults] = useState<CompletionResults>({
+    completed_puzzles: 0,
+    easy_completed: 0,
+    medium_completed: 0,
+    hard_completed: 0
+  });
   const [initialGrid, setInitialGrid] = useState<Grid>(createEmptyGrid());
 
   async function onPuzzleComplete(user: User) {
@@ -213,11 +226,21 @@ export default function SudokuGame({ user }: { user: User }) {
     }
   
     try {
-      const result = await updatePuzzleCompletion(user.id)
+      const result = await updatePuzzleCompletion(user.id, difficulty)
       
-      if (result.success && result.completed_puzzles) {
+      if (result.success) {
         console.log(`Successfully updated! Total completed puzzles: ${result.completed_puzzles}`)
-        setCompletedPuzzles(result.completed_puzzles)
+        console.log(`Easy: ${result.easy_completed}, Medium: ${result.medium_completed}, Hard: ${result.hard_completed}`)
+        
+        // Store all results
+        setCompletionResults({
+          completed_puzzles: result.completed_puzzles || 0,
+          easy_completed: result.easy_completed || 0,
+          medium_completed: result.medium_completed || 0,
+          hard_completed: result.hard_completed || 0
+        });
+        
+        setIsGameWon(true)
         return true
       } else {
         console.error("Failed to update progress:", result.error)
@@ -258,7 +281,7 @@ export default function SudokuGame({ user }: { user: User }) {
       setIsGameWon(true);
       onPuzzleComplete(user);
     }
-  }, [grid, user]);
+  }, [grid, user, onPuzzleComplete]);
 
   const handleCellClick = (row: number, col: number) => {
     setSelectedCell([row, col]);
@@ -304,7 +327,7 @@ export default function SudokuGame({ user }: { user: User }) {
     return () => window.removeEventListener("keypress", handleKeyPress);
   }, [selectedCell, puzzleType, handleInput]);
 
-  // Add test function
+  // Update the test function to use current difficulty
   const handleTestCompletion = async () => {
     const success = await onPuzzleComplete(user)
     if (success) {
@@ -384,10 +407,10 @@ export default function SudokuGame({ user }: { user: User }) {
             </Button>
             {process.env.NODE_ENV === 'development' && (
               <Button 
-                onClick={handleTestCompletion}
+                onClick={() => handleTestCompletion()}
                 className="bg-purple-100 hover:bg-purple-200 text-purple-700 border border-purple-200 text-sm sm:text-base"
               >
-                Test
+                Test {difficulty}
               </Button>
             )}
           </div>
@@ -424,7 +447,11 @@ export default function SudokuGame({ user }: { user: User }) {
       {/* Replace the success message with modal */}
       {isGameWon && (
         <SuccessModal 
-          completedPuzzles={completedPuzzles}
+          completedPuzzles={completionResults.completed_puzzles}
+          currentDifficulty={difficulty}
+          easyCompleted={completionResults.easy_completed}
+          mediumCompleted={completionResults.medium_completed}
+          hardCompleted={completionResults.hard_completed}
           onClose={handleSuccessModalClose}
         />
       )}
