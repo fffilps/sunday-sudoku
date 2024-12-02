@@ -204,6 +204,7 @@ export default function SudokuGame({ user }: { user: User }) {
   const [userInputs, setUserInputs] = useState<UserInputs>(new Set());
   const [shakeCell, setShakeCell] = useState<string | null>(null);
   const [completedPuzzles, setCompletedPuzzles] = useState<number>(0)
+  const [initialGrid, setInitialGrid] = useState<Grid>(createEmptyGrid());
 
   async function onPuzzleComplete(user: User) {
     if (!user) {
@@ -228,16 +229,24 @@ export default function SudokuGame({ user }: { user: User }) {
     }
   }
 
-  // Add useCallback to memoize startNewGame
+  // Modify startNewGame to store initial state
   const startNewGame = useCallback(() => {
-    const solved = generateSolvedGrid();
-    setGrid(solved);
+    // const solved = generateSolvedGrid();
     const newPuzzle = generateSudokuPuzzle(difficulty);
+    setInitialGrid(newPuzzle); // Store initial puzzle state
     setGrid(newPuzzle);
     setSelectedCell(null);
     setIsGameWon(false);
-    setUserInputs(new Set()); // Reset user inputs
-  }, [difficulty]); // Added difficulty as a dependency
+    setUserInputs(new Set());
+  }, [difficulty]);
+
+  // Modify resetGame to restore initial state
+  const resetGame = () => {
+    setGrid(initialGrid.map(row => [...row])); // Create deep copy of initial grid
+    setSelectedCell(null);
+    setIsGameWon(false);
+    setUserInputs(new Set());
+  };
 
   // Add useEffect to start a new game when component mounts
   useEffect(() => {
@@ -275,13 +284,6 @@ export default function SudokuGame({ user }: { user: User }) {
       });
     }
   }, [selectedCell, grid, setShakeCell]);
-
-  const resetGame = () => {
-    setGrid(createEmptyGrid());
-    setSelectedCell(null);
-    setIsGameWon(false);
-    setUserInputs(new Set());
-  };
 
   // Add keyboard event listener
   useEffect(() => {
