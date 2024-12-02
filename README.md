@@ -7,6 +7,10 @@ Starting mainly as a nextjs app then will become a react native application to i
 ## todo: 
 so left off on progress updating. Make new function thats simple. it updates the userprogress with the new updated completed puzzle count. then document the level of each puzzle done - for algorithm with ranking and scoreing. 
 
+- so we have the supabase connected. on completion, it shows live amount of completed quizzes. I now need to add the difficulty levels with each count, so that on profile view and success screen, I can show how many of each quiz they have done. Again it helps for later algorthms, levels, and rankings.
+
+- Need to hide the type portion for now, as i dont know the other types yet nor began building it out.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
